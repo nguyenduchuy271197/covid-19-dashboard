@@ -1,1 +1,1 @@
-# Covid 19 Dashboard
+# Plotly Dash Practices
