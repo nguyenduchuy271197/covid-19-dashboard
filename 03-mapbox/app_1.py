@@ -3,12 +3,12 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
 import dash_bootstrap_components as dbc
-# from dash_html_components.Div import Div
+from dash_html_components.Div import Div
 import pandas as pd
-# import plotly.graph_objects as go
+import plotly.graph_objects as go
 import plotly.express as px
 
-df = pd.read_csv("data/recycling.csv")
+df = pd.read_csv("data/finalrecycling.csv")
 columns = ['name_location', 'website', 'boro', 'address_area', 'latitude', 'longitude', 'type', 'color', 'hov_txt']
 
 
@@ -81,26 +81,20 @@ type_checklist = html.Div([
 )
 ])
 
-website = html.Div([
-    html.Div("Website:", className="legend-title"),
-    html.Div(children= "asdasd", id="website", style= {"border": "1px solid black", "text-align": "left", "padding": "3px"})
-])
-
 list_group = dbc.ListGroup(
     [
         dbc.ListGroupItem(legend),
         dbc.ListGroupItem(boro_checklist),
         dbc.ListGroupItem(type_checklist),
-        dbc.ListGroupItem(website)
     ]
 )
 
 
 row = dbc.Row([
-    dbc.Col(list_group, width= 3),
+    dbc.Col([list_group]),
     dbc.Col([
         html.H1("Where to Recycle?"),
-        dcc.Graph(id="graph-output")], width=9, className="graph")
+        dcc.Graph(id="graph-output")], width=9, className="container")
 ])
 
 
@@ -114,39 +108,34 @@ def update_figure(boro, types):
     print(boro)
     display_df = df[(df["boro"].isin(boro)) & (df["type"].isin(types))]
     print(types)
-    print()
-    fig = px.scatter_mapbox(data_frame=display_df, 
-                  lat= "latitude", 
-                  lon= "longitude", 
-                  color= "color", 
-                  hover_name= "type", 
-                  hover_data= ["boro", "website"],
-                  custom_data=["website"],
-                  opacity=1, 
-                  zoom=10.5, 
-                  center= dict(lat= 40.74,lon= -73.9),
-                  template="plotly_dark", 
-                  height=650, width=1000)
+    fig=go.Figure(data= [go.Scattermapbox(
+                        lon = display_df['longitude'],
+                        lat = display_df['latitude'],
+                        mode='markers',
+                        marker={'color' : display_df['color']},
+                        unselected={'marker' : {'opacity':1}},
+                        selected={'marker' : {'opacity':0.5, 'size':25}},
+                        hoverinfo='text',
+                        hovertext=display_df['hov_txt'],
+                        customdata=display_df['website']
+    )])
 
-    fig.update_traces(selected_marker= dict(opacity= 1, size= 10), unselected_marker= dict(opacity= 0.6))
-
-    fig.update_layout(margin= dict(t=0, l=0, b=0, r=0), 
-                    showlegend= False, 
-                    mapbox=dict(bearing=20,pitch=40), 
-                    clickmode= "event+select")
+    fig.update_layout(uirevision= 'foo',
+                        clickmode= 'event+select',
+                        hovermode='closest',
+                        hoverdistance=2,
+                        title=dict(text="Where to Recycle My Stuff?",font=dict(size=50, color='green')),
+                        mapbox=dict(
+                        # accesstoken=mapbox_access_token,
+                            bearing=25,
+                            style='light',
+                            center=dict(lat=40.80105,lon=-73.945155),
+                            pitch=40,
+                            zoom=11.5)
+                        )
     return fig
     
-@app.callback(Output("website", "children"), [Input("graph-output", "clickData")])
-def update_website(click_data):
-    if click_data is None:
-        return "Click a point on map"
-    else:
-        print(click_data)
-        output = click_data["points"][0]["customdata"][0]
-        print(output)
-        if "http" not in output and output is None:
-            return "No web here!"
-        return html.A(children=output, href=output)
+
 
 if __name__ == "__main__":
        app.run_server(debug=True)
