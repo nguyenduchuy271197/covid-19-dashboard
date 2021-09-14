@@ -83,7 +83,11 @@ type_checklist = html.Div([
 
 website = html.Div([
     html.Div("Website:", className="legend-title"),
-    html.Div(children= "asdasd", id="website", style= {"border": "1px solid black", "text-align": "left", "padding": "3px"})
+    html.Pre(children= "asdasd", id="website", style= {"border": "1px solid black", 
+                                                        "text-align": "center", 
+                                                        "padding": "10px", 
+                                                        'white-space': 'pre-wrap', 
+                                                        'word-break': 'break-all'})
 ])
 
 list_group = dbc.ListGroup(
