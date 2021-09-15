@@ -1,0 +1,14 @@
+.input {
+    margin-right: 5px;
+}
+
+.button {
+    padding-top: 0.5px;
+}
+
+.title {
+    font-size: 3rem;
+    margin-bottom: 20px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
