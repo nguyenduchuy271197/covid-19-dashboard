@@ -14,9 +14,20 @@ from dash.dependencies import Output, Input
 
 BACKGROUND_GRAPH_COLOR = '#30475E'
 
+def human_format(num):
+    magnitude = 0
+    while abs(num) >= 1000:
+        magnitude += 1
+        num /= 1000.0
+    return '$%.1f%s' % (num, ['', 'K', 'M', 'G', 'T', 'P'][magnitude])
+
+def cvt_currency(num):
+    return "${:,.2f}".format(num)
+
 external_stylesheets = 'https://codepen.io/chriddyp/pen/bWLwgP.css'
 month_dict = {1: 'January', 2: 'February', 3: 'March', 4: 'April', 5: 'May',
              6: 'June', 7: 'July', 8: 'August', 9: 'September',10: 'October', 11: 'November', 12: 'December'}
+        
 
 
 
@@ -95,10 +106,24 @@ app.layout = html.Div([
 def update_subreg_bar(year, segment, subreg):
     yr_seg_subcat_grp = df.groupby(["Year","Segment",subreg]).sum()
 
-    five_largest_sales = yr_seg_subcat_grp.loc[(year, segment)].reset_index().nlargest(5, "Sales")
-    fig = px.bar(data_frame= five_largest_sales, x="Sales", y=subreg, orientation="h", title="sdasd")
-    fig.update_layout(font= dict(color= "white"), paper_bgcolor='#30475E', plot_bgcolor='#30475E', yaxis=dict(autorange="reversed"))
-    fig.update_xaxes(showgrid=False)
+    sales_df = yr_seg_subcat_grp.loc[(year, segment)].reset_index().nlargest(5, "Sales")
+    sales_df["Format Sales"] = sales_df["Sales"].apply(human_format)
+    sales_df["Currency Format"] = sales_df["Sales"].apply(lambda num: "${:,.2f}".format(num))
+    fig = px.bar(data_frame= sales_df, x="Sales", y=subreg, orientation="h", text= "Format Sales", height= 400, custom_data=["Currency Format"])
+    fig.update_layout(font= dict(color= "white"),
+                                paper_bgcolor='#30475E', 
+                                plot_bgcolor='#30475E',
+                                yaxis=dict(autorange="reversed"), 
+                                margin= dict(t=50, r=20, b=10, l=0, pad=0))
+    fig.update_traces(hovertemplate="<br>".join(["Sales: %{x}", subreg + ": %{custom_data[0]}"]))
+    fig.update_xaxes(showgrid=False, showticklabels=False, title="")
+    fig.update_yaxes(title="", 
+                    ticklabelposition= "outside", 
+                    ticks="outside", 
+                    tickson="labels", 
+                    ticklen=10, 
+                    tickfont_color="orange", 
+                    tickcolor="orange")
     return fig
 
 
