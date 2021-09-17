@@ -81,8 +81,7 @@ app.layout = html.Div([
     ], className="title-container"),
     html.Div([
         html.Div([subcat_region_radioitem, dcc.Graph(id="subreg-bar")], style= {"width": "20%"}),
-        html.Div([
-            html.Div("Sales by Category in year 2018"), 
+        html.Div([ 
             dcc.Graph(id="sales-pie")], style= {"width": "20%"}),
         html.Div([dcc.Graph(id="sales-line")], style= {"width": "45%"}),
         html.Div([
@@ -109,13 +108,19 @@ def update_subreg_bar(year, segment, subreg):
     sales_df = yr_seg_subcat_grp.loc[(year, segment)].reset_index().nlargest(5, "Sales")
     sales_df["Format Sales"] = sales_df["Sales"].apply(human_format)
     sales_df["Currency Format"] = sales_df["Sales"].apply(lambda num: "${:,.2f}".format(num))
-    fig = px.bar(data_frame= sales_df, x="Sales", y=subreg, orientation="h", text= "Format Sales", height= 400, custom_data=["Currency Format"])
-    fig.update_layout(font= dict(color= "white"),
+    fig = px.bar(data_frame= sales_df, 
+                            x="Sales", 
+                            y=subreg, 
+                            orientation="h", 
+                            text= "Format Sales", 
+                            height= 400, 
+                            custom_data=["Currency Format"], title= f"Sales by {subreg} {year}")
+    fig.update_layout(font= dict(color= "white"), title= dict(font_size=12, x=0.5),
                                 paper_bgcolor='#30475E', 
                                 plot_bgcolor='#30475E',
                                 yaxis=dict(autorange="reversed"), 
                                 margin= dict(t=50, r=20, b=10, l=0, pad=0))
-    fig.update_traces(hovertemplate="<br>".join(["Sales: %{x}", subreg + ": %{custom_data[0]}"]))
+    fig.update_traces(hovertemplate="<br>".join(["Sales: %{x}", subreg + ": %{custom_data}"]))
     fig.update_xaxes(showgrid=False, showticklabels=False, title="")
     fig.update_yaxes(title="", 
                     ticklabelposition= "outside", 
@@ -132,8 +137,12 @@ def update_subreg_bar(year, segment, subreg):
                     Input("segment", "value")])
 def update_sales_pie(year, segment):
     sales_df = df.groupby(["Year", "Segment", "Category"]).sum().loc[(year, segment)].reset_index()
-    fig = px.pie(data_frame=sales_df, names= "Category", values="Sales")
+    fig = px.pie(data_frame=sales_df, names= "Category", values="Sales", title= f"Sales by Category in year {year}", hole=0.6)
+    fig.update_traces(textinfo="label+percent", textposition="outside")
     fig.update_layout(font= dict(color= "white"), paper_bgcolor=BACKGROUND_GRAPH_COLOR, plot_bgcolor=BACKGROUND_GRAPH_COLOR)
+    fig.update_layout(legend=dict(x=0.25, y=-0.25, traceorder= "normal"), 
+                        margin= dict(t=0, r=30, b=0, l=30), 
+                        title= dict(font_size=14, x=0.5))
     return fig
 
 
@@ -142,8 +151,19 @@ def update_sales_pie(year, segment):
                     Input("segment", "value")])
 def update_sales_line(year, segment):
     sales_df = df.groupby(["Year", "Segment", "Month"]).sum().loc[(year, segment)].reset_index()
-    fig = px.line(data_frame=sales_df, x= "Month", y="Sales")
+    sales_df["Format Sales"] = sales_df["Sales"].apply(human_format)
+    fig = px.line(data_frame=sales_df, x= "Month", y="Sales", text="Format Sales", title=f"Sales Trend in Year {year}")
+    fig.update_traces(mode="markers+lines+text", textposition='bottom left', marker= dict(size=10), line_color="orange")
     fig.update_layout(font= dict(color= "white"), paper_bgcolor=BACKGROUND_GRAPH_COLOR, plot_bgcolor=BACKGROUND_GRAPH_COLOR)
+    fig.update_layout(title=dict(x=0.5))
+    fig.update_xaxes(showline=True, showgrid=False, title= "",
+                        # ticklabelposition= "outside", 
+                        ticks="outside", 
+                        tickson="labels", 
+                        ticklen=10, 
+                        tickfont_color="orange", 
+                        tickcolor="orange")
+    fig.update_yaxes(showline=False, title= "", showticklabels=False)
     return fig
 
 
