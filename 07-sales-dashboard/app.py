@@ -12,11 +12,11 @@ import dash_html_components as html
 from dash.dependencies import Output, Input
 
 
+BACKGROUND_GRAPH_COLOR = '#30475E'
 
 external_stylesheets = 'https://codepen.io/chriddyp/pen/bWLwgP.css'
 month_dict = {1: 'January', 2: 'February', 3: 'March', 4: 'April', 5: 'May',
              6: 'June', 7: 'July', 8: 'August', 9: 'September',10: 'October', 11: 'November', 12: 'December'}
-
 
 
 
@@ -61,31 +61,31 @@ state_city_radioitem = dcc.RadioItems(
 )
 
 
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], title="Sales Dashboard")
 app.layout = html.Div([
     html.Div([
-        html.H1("Sales Dashboard"),
-        html.Div([html.H3("Year"), year_slider]),
-        html.Div([html.H3("Segment"), segment_radioitem])
-    ]),
+        html.Div(html.H1("Sales Dashboard"), style= {"width": "20%"}),
+        html.Div([html.H3("Year"), year_slider], style= {"width": "50%"}),
+        html.Div([html.H3("Segment"), segment_radioitem], style= {"width": "20%"})
+    ], className="title-container"),
     html.Div([
-        html.Div([subcat_region_radioitem, dcc.Graph(id="subreg-bar")]),
+        html.Div([subcat_region_radioitem, dcc.Graph(id="subreg-bar")], style= {"width": "20%"}),
         html.Div([
             html.Div("Sales by Category in year 2018"), 
-            dcc.Graph(id="sales-pie")]),
-        html.Div([dcc.Graph(id="sales-line")]),
+            dcc.Graph(id="sales-pie")], style= {"width": "20%"}),
+        html.Div([dcc.Graph(id="sales-line")], style= {"width": "45%"}),
         html.Div([
-            html.Div([html.H3("Current Year"), html.H4("$722,052.02")]),
-            html.Div([html.H3("Current Year"), html.H4("$722,052.02")]),
-            html.Div([html.H3("Current Year"), html.H4("$722,052.02")])
-        ])
-    ]),
+            html.Div([html.P("Current Year"), html.P("$722,052.02")]),
+            html.Div([html.P("Current Year"), html.P("$722,052.02")]),
+            html.Div([html.P("Current Year"), html.P("$722,052.02")])
+        ], style= {"width": "10%"})
+    ], className="sales-container"),
     html.Div([
         html.Div("A Dash Table Over Here!"),
         html.Div([state_city_radioitem, dcc.Graph(id="staci-bar")]),
         html.Div([dcc.Graph(id="sales-bubble")])
-    ]),
-])
+    ], className="second-sales-container"),
+], className="all-containers")
 
 
 @app.callback(Output("subreg-bar", "figure"), 
@@ -96,7 +96,9 @@ def update_subreg_bar(year, segment, subreg):
     yr_seg_subcat_grp = df.groupby(["Year","Segment",subreg]).sum()
 
     five_largest_sales = yr_seg_subcat_grp.loc[(year, segment)].reset_index().nlargest(5, "Sales")
-    fig = px.bar(data_frame= five_largest_sales, x="Sales", y=subreg, orientation="h")
+    fig = px.bar(data_frame= five_largest_sales, x="Sales", y=subreg, orientation="h", title="sdasd")
+    fig.update_layout(font= dict(color= "white"), paper_bgcolor='#30475E', plot_bgcolor='#30475E', yaxis=dict(autorange="reversed"))
+    fig.update_xaxes(showgrid=False)
     return fig
 
 
@@ -106,15 +108,17 @@ def update_subreg_bar(year, segment, subreg):
 def update_sales_pie(year, segment):
     sales_df = df.groupby(["Year", "Segment", "Category"]).sum().loc[(year, segment)].reset_index()
     fig = px.pie(data_frame=sales_df, names= "Category", values="Sales")
+    fig.update_layout(font= dict(color= "white"), paper_bgcolor=BACKGROUND_GRAPH_COLOR, plot_bgcolor=BACKGROUND_GRAPH_COLOR)
     return fig
 
 
 @app.callback(Output("sales-line", "figure"), 
                     [Input("year", "value"), 
                     Input("segment", "value")])
-def update_sales_pie(year, segment):
+def update_sales_line(year, segment):
     sales_df = df.groupby(["Year", "Segment", "Month"]).sum().loc[(year, segment)].reset_index()
     fig = px.line(data_frame=sales_df, x= "Month", y="Sales")
+    fig.update_layout(font= dict(color= "white"), paper_bgcolor=BACKGROUND_GRAPH_COLOR, plot_bgcolor=BACKGROUND_GRAPH_COLOR)
     return fig
 
 
@@ -122,10 +126,20 @@ def update_sales_pie(year, segment):
                 [Input("year", "value"), 
                 Input("segment", "value"), 
                 Input("staci", "value")])
-def update_sales_pie(year, segment, staci):
+def update_staci_bar(year, segment, staci):
     sales_df = df.groupby(["Year", "Segment", staci]).sum().loc[(year, segment)].reset_index().nlargest(10, "Sales")
     fig = px.bar(data_frame= sales_df, x="Sales", y=staci, orientation="h")
+    fig.update_layout(font= dict(color= "white"), paper_bgcolor=BACKGROUND_GRAPH_COLOR, plot_bgcolor=BACKGROUND_GRAPH_COLOR)
     return fig
+
+
+# @app.callback(Output("sales-bubble", "figure"), 
+#                     [Input("year", "value"), 
+#                     Input("segment", "value")])
+# def update_sales_bubble(year, segment):
+#     sales_df = df.groupby(["Year", "Segment", "State", "City"]).sum().loc[(year, segment)].reset_index()
+#     fig = px.pie(data_frame=sales_df, names= "Category", values="Sales")
+#     return fig
 
 
 if __name__ == "__main__":
