@@ -1,0 +1,15 @@
+html {
+    padding: 0;
+}
+
+.sidenav {
+    text-align: center;
+    color:white;
+    padding: 0;
+}
+
+.sidenav > div {
+    height: 100%;
+    background-color: #082032;
+}
+
